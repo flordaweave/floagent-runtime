@@ -190,7 +190,10 @@ Set `completion_verification: true` to request verification, `false` to skip it,
 the field to inherit the default. If multiple active skills specify overrides, explicit
 `true` takes precedence over `false`. Required helper skills participate in the same rule.
 The setting applies to normal successful model-backed execution; it does not add verification
-to direct tool calls.
+to direct tool calls. An enabled verifier that cannot complete causes the turn to fail rather
+than report success. Disabling verification does not allow empty interactive replies: the runtime
+attempts one continuation from existing tool results, then reports failure if no visible reply or
+attachment is produced.
 
 
 ## Visibility Summary
