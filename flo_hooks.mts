@@ -1650,6 +1650,7 @@ globalThis.__flo_runtime = {
     cancel: async (_request: unknown) => unsupported("flo.task.cancel"),
     spawnChildren: async (_request: unknown) => unsupported("flo.task.spawnChildren"),
     waitForBatch: async () => unsupported("flo.task.waitForBatch"),
+    // Durable waits (including timeout deadlines) require the backend dispatcher.
     waitForUserMessage: async () => unsupported("flo.task.waitForUserMessage"),
     getBatchResults: async () => unsupported("flo.task.getBatchResults"),
   },

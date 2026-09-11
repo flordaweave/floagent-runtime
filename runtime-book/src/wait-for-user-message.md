@@ -91,3 +91,40 @@ When browser automation reaches a human-required state, call `waitForUserMessage
 The local Node preload shim declares `flo.task.waitForUserMessage(...)`, but it intentionally fails at runtime because user-message suspension requires a real task dispatcher.
 
 Next: [Debug Events](debug-events.md)
+
+## Durable timeout
+
+Set `timeout` to resume if no reply arrives within the specified duration:
+
+```ts
+const response = await flo.task.waitForUserMessage({
+  user_message: "Please confirm which report to use.",
+  resume_payload: { phase: "choose_report" },
+  timeout: {
+    seconds: 1800,
+    resume_prompt: "Finish with the available information and report unresolved items.",
+  },
+});
+
+if (response.resume_reason === "timeout") {
+  return { unresolved: "No report was selected before the timeout." };
+}
+return { reply: response.user_message };
+```
+
+`seconds` must be an integer from 1 to 31,536,000, and `resume_prompt` must be
+non-empty. Without `timeout`, the wait has no script-defined deadline.
+
+The deadline is durable across restarts. Expiry returns `resume_reason: "timeout"`,
+`resume_prompt`, and the saved `resume_payload`; it does not return a fabricated
+`user_message`. A normal reply returns `resume_reason: "user_message"`. The timeout
+prompt also guides the agent's continuation after the script returns. A timeout is
+not user approval.
+
+As with a reply, recovery starts the script from its entrypoint. Checkpoint progress
+and make operations before the wait idempotent. A resume outcome is consumed only
+once per invocation; a subsequent wait establishes a new suspension.
+
+A schedule can impose a shorter suspension timeout. Scheduled runs allow one
+timeout-driven resume; suspending again ends the run as failed. For other task
+wait APIs, timeout options are not currently exposed in TypeScript.

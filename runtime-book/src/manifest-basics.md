@@ -92,6 +92,7 @@ Optional fields include:
 
 - `version`
 - `execution_model_tier`
+- `completion_verification`
 - `tools`
 - `script_tools`
 - `tool_definitions`
@@ -157,6 +158,40 @@ Authoring rules:
 - use `script_tools` when only your script should call the tool
 - do not repeat an inline tool from `tool_definitions` in either `tools` or `script_tools`
 - `script_tools` only changes LLM visibility; it does not create a separate security boundary from the selected skill's scripts
+
+## MCP Tool References
+
+Runtime MCP tools use the same `tools` and `script_tools` fields as built-in and manifest-backed
+tools. Their ids have the form `mcp__<server_id>__<tool_name>`:
+
+```yaml
+tools:
+  - mcp__github__search_issues
+script_tools:
+  - mcp__github__get_issue
+```
+
+The runtime administrator must register the named MCP server separately. Skill manifests contain
+only tool ids; server addresses and vault credential bindings are not part of a skill bundle.
+
+## Completion Verification
+
+Skills may override the default completion check with an optional boolean:
+
+```yaml
+skill_id: example
+name: Example
+description: Handle a request
+instruction: Complete the requested work.
+completion_verification: false
+```
+
+Set `completion_verification: true` to request verification, `false` to skip it, or omit
+the field to inherit the default. If multiple active skills specify overrides, explicit
+`true` takes precedence over `false`. Required helper skills participate in the same rule.
+The setting applies to normal successful model-backed execution; it does not add verification
+to direct tool calls.
+
 
 ## Visibility Summary
 
@@ -481,3 +516,20 @@ The runtime rejects:
 - `..` traversal for author-facing asset imports
 
 Next: [TypeScript Runtime](typescript-runtime.md)
+
+### Scheduled suspension timeout
+
+A schedule manifest can optionally cap how long each suspension lasts:
+
+```yaml
+concurrency_policy: forbid
+suspension_timeout:
+  seconds: 1800
+  resume_prompt: "Finish with available information and report unresolved items."
+```
+
+The duration must be an integer from 1 to 31,536,000 seconds and the prompt must be
+non-empty. A script may request a shorter wait. Suspended runs continue to count
+as active for overlap prevention. A scheduled run receives one timeout-driven
+resume; suspending again fails the run so later occurrences can proceed. This
+setting does not limit active execution time. Changes apply to future runs.

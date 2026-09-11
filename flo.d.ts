@@ -238,14 +238,20 @@ declare module "flo:runtime" {
 
   interface FloWaitForUserMessageRequest {
     user_message: string;
+    timeout?: { seconds: number; resume_prompt: string };
     resume_schema?: { [key: string]: FloJsonValue };
     resume_payload?: FloJsonValue;
   }
 
-  interface FloWaitForUserMessageResponse {
+  type FloWaitForUserMessageResponse = {
+    resume_reason: "user_message";
     user_message: string;
     resume_payload?: FloJsonValue;
-  }
+  } | {
+    resume_reason: "timeout";
+    resume_prompt: string;
+    resume_payload?: FloJsonValue;
+  };
 
   interface FloTaskGetToolStateRequest {
     key: string;
