@@ -49,6 +49,20 @@ The runtime provides:
 
 That means many integration-oriented tools can work without additional libraries.
 
+Read a virtual workspace file as raw bytes with `flo.fs.readBytes`:
+
+```ts
+import * as flo from "flo:runtime";
+
+const bytes: Uint8Array = await flo.fs.readBytes("task://artifacts/report.pdf");
+```
+
+`readBytes(path)` reads the entire file into memory and returns a fresh `Uint8Array`.
+It accepts `task://` and `session://` paths in the current execution context.
+The promise rejects for invalid paths (including traversal), missing files, directories,
+or other read failures. It requires a configured virtual workspace and execution context.
+The local Node shim supports the same API using `FLO_VFS_ROOT`.
+
 For multipart uploads from the virtual workspace, create a VFS-backed `File` with `flo.file(...)`:
 
 ```ts

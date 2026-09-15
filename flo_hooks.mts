@@ -1664,6 +1664,23 @@ globalThis.__flo_runtime = {
   },
   callTool: async () => unsupported("flo.callTool"),
   file: createVfsFile,
+  fs: {
+    readBytes: async (rawPath: string): Promise<Uint8Array> => {
+      if (typeof rawPath !== "string") {
+        throw new TypeError("flo.fs.readBytes requires a string path");
+      }
+      const value = rawPath.trim();
+      if (!isVfsPath(value)) {
+        throw new TypeError("flo.fs.readBytes requires a task:// or session:// VFS URI");
+      }
+      const relative = value.replace(/^(task|session):\/\//, "").trim();
+      if (path.isAbsolute(relative) || relative.split(path.sep).includes("..")) {
+        throw new TypeError("flo.fs.readBytes rejects absolute paths and traversal");
+      }
+      const root = resolveLocalVfsFilesystemPath(value.startsWith("task://") ? "task://" : "session://");
+      return new Uint8Array(await fs.promises.readFile(path.join(root, relative)));
+    },
+  },
   browser: {
     run: browserRun,
     startRequestCapture: browserStartRequestCapture,
@@ -1688,6 +1705,7 @@ export const task = runtime.task;
 export const dispatcher = runtime.dispatcher;
 export const callTool = runtime.callTool;
 export const file = runtime.file;
+export const fs = runtime.fs;
 export const browser = runtime.browser;
 `;
 

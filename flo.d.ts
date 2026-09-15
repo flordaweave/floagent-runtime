@@ -1667,6 +1667,11 @@ declare module "flo:runtime" {
     ): Promise<FloToolCallResult<TOutput>>;
     /** Create a web-like File backed by a task:// or session:// VFS path for multipart uploads. */
     file(path: string, options?: FloFileOptions): File;
+    /** Read files from the current task or session virtual workspace. */
+    fs: {
+      /** Read an entire task:// or session:// file into memory; rejects invalid paths and I/O failures. */
+      readBytes(path: string): Promise<Uint8Array>;
+    };
     /** Drive a host-managed Playwright browser session. */
     browser: {
       /** Run a single browser command in the current task browser session. */
@@ -1717,6 +1722,8 @@ declare module "flo:runtime" {
   export const callTool: FloRuntimeApi["callTool"];
   /** VFS-backed File helper exposed by the Flo runtime. */
   export const file: FloRuntimeApi["file"];
+  /** Virtual workspace file operations exposed by the Flo runtime. */
+  export const fs: FloRuntimeApi["fs"];
   /** Browser automation helpers exposed by the Flo runtime. */
   export const browser: FloRuntimeApi["browser"];
 }
