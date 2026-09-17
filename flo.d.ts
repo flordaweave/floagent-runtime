@@ -727,7 +727,7 @@ declare module "flo:runtime" {
     | "media_push_base64"
     /** Return a fresh presigned download URL for previously uploaded media. Use this when a notification body needs a direct media link. Example input: {"media_id":"11111111-1111-1111-1111-111111111111"}. */
     | "get_media_download_url"
-    /** Read a bounded portion of a large tool-result artifact referenced by the current task. Use json_pointer for a JSON subtree, or offset and limit for text/array pagination. The complete artifact is never returned in one call. */
+    /** Read a bounded portion of a large tool-result artifact referenced by the current task. Use artifact_id values from ToolResult.artifact, the task artifact_catalog, or list_tool_result_artifacts entries; a task_id is not an artifact_id. Use json_pointer for a JSON subtree, or offset and limit for text/array pagination. The complete artifact is never returned in one call. */
     | "read_tool_result_artifact"
     /** Send a notification through an admin-configured notification channel. Provide exactly one of channel_name or channel_id. Prefer channel_name in authored skills; use channel_id for stricter programmatic callers. Supported msgtype values are text, markdown, markdown_v2, image, and file. */
     | "send_notification"
@@ -735,6 +735,8 @@ declare module "flo:runtime" {
     | "send_media_attachment"
     /** Activate a visible skill for the current task by `skill_id`. Activation is additive: it keeps existing selected skills and adds the new one. Use `list_available_skills` first when you need to inspect candidate skill ids. If the skill is already selected, this tool succeeds as a no-op. */
     | "activate_skill"
+    /** Browse this task's stored tool-result artifact metadata, newest first. Use tool_name for exact filtering or query for case-insensitive metadata text search. Follow next_offset with the same filters to discover omitted artifacts; read_tool_result_artifact retrieves content. Content previews are omitted. Pruned metadata has sequence zero and remains discoverable without filters. Nonzero sequence is first-observed order, not proof that data is current. */
+    | "list_tool_result_artifacts"
     /** Read a text resource from a selected skill or import any skill resource into VFS by `skill_id` and `resource_id`. Use `resource_id` exactly as provided in the prompt (for example, `"resource.1"`). Do not strip prefixes, rewrite the value, or replace it with the filename. Valid example: `"resource_id":"resource.1"`. Invalid examples: `"resource_id":"1"` and `"resource_id":"guide.md"`. For text resources, prefer `mode=text` to read content directly. Use `mode=import_to_vfs` only when you need the resource saved as a VFS file for other tools or file-based processing, and provide `destination_path`. `destination_path` must be a VFS path such as `task://...` or `session://...`. Key takeaway: the `resource_id` is system-assigned and may differ from the actual file path. */
     | "read_skill_resource"
     /** Import a file from a selected skill into VFS by `skill_id` and author-relative `asset_path`. `skill_id` must match one of the selected skills. `asset_path` must stay relative to that skill's directory; absolute paths and `..` traversal are rejected. `destination_path` must be a VFS path such as `task://...` or `session://...`. */
@@ -1343,6 +1345,30 @@ declare module "flo:runtime" {
     skill_id: string;
   };
 
+  /** Input accepted by the `list_tool_result_artifacts` runtime tool. */
+  type FloListToolResultArtifactsInput = {
+    limit?: number;
+    offset?: number;
+    query?: string;
+    tool_name?: string;
+  };
+
+  /** Output returned by the `list_tool_result_artifacts` runtime tool. */
+  type FloListToolResultArtifactsOutput = {
+    entries: ({
+        artifact_id: string;
+        content_type: string | null;
+        first_seen_sequence: number;
+        preview: FloJsonValue;
+        size_bytes: number | null;
+        summary: string | null;
+        tool_name: string | null;
+      })[];
+    has_more: boolean;
+    next_offset: number | null;
+    total_entries: number;
+  };
+
   /** Input accepted by the `read_skill_resource` runtime tool. */
   type FloReadSkillResourceInput = {
     destination_path?: string;
@@ -1437,7 +1463,7 @@ declare module "flo:runtime" {
     "media_push_base64": FloMediaPushBase64Input;
     /** Return a fresh presigned download URL for previously uploaded media. Use this when a notification body needs a direct media link. Example input: {"media_id":"11111111-1111-1111-1111-111111111111"}. */
     "get_media_download_url": FloGetMediaDownloadUrlInput;
-    /** Read a bounded portion of a large tool-result artifact referenced by the current task. Use json_pointer for a JSON subtree, or offset and limit for text/array pagination. The complete artifact is never returned in one call. */
+    /** Read a bounded portion of a large tool-result artifact referenced by the current task. Use artifact_id values from ToolResult.artifact, the task artifact_catalog, or list_tool_result_artifacts entries; a task_id is not an artifact_id. Use json_pointer for a JSON subtree, or offset and limit for text/array pagination. The complete artifact is never returned in one call. */
     "read_tool_result_artifact": FloReadToolResultArtifactInput;
     /** Send a notification through an admin-configured notification channel. Provide exactly one of channel_name or channel_id. Prefer channel_name in authored skills; use channel_id for stricter programmatic callers. Supported msgtype values are text, markdown, markdown_v2, image, and file. */
     "send_notification": FloSendNotificationInput;
@@ -1445,6 +1471,8 @@ declare module "flo:runtime" {
     "send_media_attachment": FloSendMediaAttachmentInput;
     /** Activate a visible skill for the current task by `skill_id`. Activation is additive: it keeps existing selected skills and adds the new one. Use `list_available_skills` first when you need to inspect candidate skill ids. If the skill is already selected, this tool succeeds as a no-op. */
     "activate_skill": FloActivateSkillInput;
+    /** Browse this task's stored tool-result artifact metadata, newest first. Use tool_name for exact filtering or query for case-insensitive metadata text search. Follow next_offset with the same filters to discover omitted artifacts; read_tool_result_artifact retrieves content. Content previews are omitted. Pruned metadata has sequence zero and remains discoverable without filters. Nonzero sequence is first-observed order, not proof that data is current. */
+    "list_tool_result_artifacts": FloListToolResultArtifactsInput;
     /** Read a text resource from a selected skill or import any skill resource into VFS by `skill_id` and `resource_id`. Use `resource_id` exactly as provided in the prompt (for example, `"resource.1"`). Do not strip prefixes, rewrite the value, or replace it with the filename. Valid example: `"resource_id":"resource.1"`. Invalid examples: `"resource_id":"1"` and `"resource_id":"guide.md"`. For text resources, prefer `mode=text` to read content directly. Use `mode=import_to_vfs` only when you need the resource saved as a VFS file for other tools or file-based processing, and provide `destination_path`. `destination_path` must be a VFS path such as `task://...` or `session://...`. Key takeaway: the `resource_id` is system-assigned and may differ from the actual file path. */
     "read_skill_resource": FloReadSkillResourceInput;
     /** Import a file from a selected skill into VFS by `skill_id` and author-relative `asset_path`. `skill_id` must match one of the selected skills. `asset_path` must stay relative to that skill's directory; absolute paths and `..` traversal are rejected. `destination_path` must be a VFS path such as `task://...` or `session://...`. */
@@ -1514,6 +1542,8 @@ declare module "flo:runtime" {
     "send_media_attachment": FloSendMediaAttachmentOutput;
     /** Output returned by the `activate_skill` runtime tool. */
     "activate_skill": FloActivateSkillOutput;
+    /** Output returned by the `list_tool_result_artifacts` runtime tool. */
+    "list_tool_result_artifacts": FloListToolResultArtifactsOutput;
     /** Output returned by the `read_skill_resource` runtime tool. */
     "read_skill_resource": FloReadSkillResourceOutput;
     /** Output returned by the `import_skill_asset` runtime tool. */

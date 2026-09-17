@@ -1662,7 +1662,14 @@ globalThis.__flo_runtime = {
     failSubject: async (_request: unknown) => unsupported("flo.dispatcher.failSubject"),
     releaseSubject: async (_request: unknown) => unsupported("flo.dispatcher.releaseSubject"),
   },
-  callTool: async () => unsupported("flo.callTool"),
+  callTool: async (request: { tool_id: string; input: unknown }) => {
+    const toolName = request?.tool_id;
+    // Catalog discovery depends on the server-side task inventory, like artifact reads.
+    if (toolName === "list_tool_result_artifacts" || toolName === "read_tool_result_artifact") {
+      return unsupported(`flo.callTool(${toolName}): requires a live task artifact catalog`);
+    }
+    return unsupported("flo.callTool");
+  },
   file: createVfsFile,
   fs: {
     readBytes: async (rawPath: string): Promise<Uint8Array> => {

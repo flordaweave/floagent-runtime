@@ -112,6 +112,7 @@ const checkpoint = await flo.task.getState<{ phase?: string }>({
 - `media_push_base64`
 - `get_media_download_url`
 - `read_tool_result_artifact`
+- `list_tool_result_artifacts`
 - `send_notification`
 - `send_media_attachment`
 - `activate_skill`
@@ -121,6 +122,24 @@ const checkpoint = await flo.task.getState<{ phase?: string }>({
 When a built-in already matches the file or media operation you need, prefer it over reimplementing the same behavior in script code.
 
 `read_tool_result_artifact` reads a bounded selection from a large tool result that the current task already references. Pass `artifact_id` and optionally `json_pointer`, `offset`, and `limit`; `limit` is a serialized-data byte budget capped at 16 KiB. The tool never returns the complete artifact in one call, and artifact ids from other tasks are not readable.
+
+`list_tool_result_artifacts` discovers the current task's stored result metadata without downloading content. Use an exact `tool_name` or case-insensitive `query` to find a relevant result, then pass its `artifact_id` to `read_tool_result_artifact`. Entries contain the originating tool, a structural size summary, content type, byte size, and first-seen sequence when known. Content previews are omitted (`preview` is null). Recent metadata is retained for up to 128 artifacts within a 64 KiB budget; older IDs remain available through unfiltered pagination with unknown metadata and sequence zero. First-seen order is not proof that data is current.
+
+`limit` defaults to 10 and accepts 1–20. Responses can be shorter because of the response size limit. Follow `next_offset` with the same filters while `has_more` is true. If new artifacts are created during pagination, restart at offset 0. Both artifact tools require a live task runtime; the local Node preload shim does not simulate stored artifacts.
+
+```ts
+const page = await flo.callTool({
+  tool_id: "list_tool_result_artifacts",
+  input: { tool_name: "orders.list", limit: 5 },
+});
+if (page.status === "success" && page.output?.entries.length) {
+  const selection = await flo.callTool({
+    tool_id: "read_tool_result_artifact",
+    input: { artifact_id: page.output.entries[0].artifact_id, limit: 4096 },
+  });
+  // Inspect the selection and pagination fields before using the result.
+}
+```
 
 ## Skill Resources And Assets
 

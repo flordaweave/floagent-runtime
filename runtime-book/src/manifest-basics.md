@@ -186,6 +186,8 @@ instruction: Complete the requested work.
 completion_verification: false
 ```
 
+A failed final tool call still requires completion verification, even when this setting is `false`. The agent may recover from the failure; if completion cannot be confirmed within the recovery limit, the task fails.
+
 Set `completion_verification: true` to request verification, `false` to skip it, or omit
 the field to inherit the default. If multiple active skills specify overrides, explicit
 `true` takes precedence over `false`. Required helper skills participate in the same rule.
