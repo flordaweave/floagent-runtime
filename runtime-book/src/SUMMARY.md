@@ -6,6 +6,7 @@
 - [Manifest Basics](manifest-basics.md)
 - [TypeScript Runtime](typescript-runtime.md)
 - [Nested Tool Calls](nested-tool-calls.md)
+- [Asking Users](asking-users.md)
 - [Wait For User Messages](wait-for-user-message.md)
 - [Debug Events](debug-events.md)
 - [Vault](vault.md)

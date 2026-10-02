@@ -1664,6 +1664,8 @@ globalThis.__flo_runtime = {
   },
   callTool: async (request: { tool_id: string; input: unknown }) => {
     const toolName = request?.tool_id;
+    // Model-only questions (including free-text questions) require a durable agent tool call.
+    if (toolName === "ask_user") return unsupported("ask_user (requires durable agent task suspension)");
     // Catalog discovery depends on the server-side task inventory, like artifact reads.
     if (toolName === "list_tool_result_artifacts" || toolName === "read_tool_result_artifact") {
       return unsupported(`flo.callTool(${toolName}): requires a live task artifact catalog`);

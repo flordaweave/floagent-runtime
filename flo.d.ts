@@ -735,6 +735,8 @@ declare module "flo:runtime" {
     | "send_media_attachment"
     /** Activate a visible skill for the current task by `skill_id`. Activation is additive: it keeps existing selected skills and adds the new one. Use `list_available_skills` first when you need to inspect candidate skill ids. If the skill is already selected, this tool succeeds as a no-op. */
     | "activate_skill"
+    /** Ask the user for input and durably pause execution. Call this alone after finishing prerequisite tools. Include the complete question and any context the user needs; do not repeat it in assistant text. Options have a visible label, canonical value, and optional unambiguous aliases. Omit options or pass an empty list for a free-text question. Option labels, values and aliases must contain 1–512 UTF-8 bytes after normalization; at most 20 aliases per option. The answer is returned on resume. Never emit hidden question metadata in text. */
+    | "ask_user"
     /** Browse this task's stored tool-result artifact metadata, newest first. Use tool_name for exact filtering or query for case-insensitive metadata text search. Follow next_offset with the same filters to discover omitted artifacts; read_tool_result_artifact retrieves content. Content previews are omitted. Pruned metadata has sequence zero and remains discoverable without filters. Nonzero sequence is first-observed order, not proof that data is current. */
     | "list_tool_result_artifacts"
     /** Read a text resource from a selected skill or import any skill resource into VFS by `skill_id` and `resource_id`. Use `resource_id` exactly as provided in the prompt (for example, `"resource.1"`). Do not strip prefixes, rewrite the value, or replace it with the filename. Valid example: `"resource_id":"resource.1"`. Invalid examples: `"resource_id":"1"` and `"resource_id":"guide.md"`. For text resources, prefer `mode=text` to read content directly. Use `mode=import_to_vfs` only when you need the resource saved as a VFS file for other tools or file-based processing, and provide `destination_path`. `destination_path` must be a VFS path such as `task://...` or `session://...`. Key takeaway: the `resource_id` is system-assigned and may differ from the actual file path. */
@@ -1345,6 +1347,26 @@ declare module "flo:runtime" {
     skill_id: string;
   };
 
+  /** Input accepted by the `ask_user` runtime tool. */
+  type FloAskUserInput = {
+    context?: string;
+    options?: {
+        aliases?: string[];
+        label: string;
+        value: string;
+      }[];
+    question: string;
+  };
+
+  /** Output returned by the `ask_user` runtime tool. */
+  type FloAskUserOutput = {
+    instruction?: string;
+    question_id: string;
+    status: "answered" | "follow_up" | "cancelled";
+    user_message?: string;
+    value?: string;
+  };
+
   /** Input accepted by the `list_tool_result_artifacts` runtime tool. */
   type FloListToolResultArtifactsInput = {
     limit?: number;
@@ -1471,6 +1493,8 @@ declare module "flo:runtime" {
     "send_media_attachment": FloSendMediaAttachmentInput;
     /** Activate a visible skill for the current task by `skill_id`. Activation is additive: it keeps existing selected skills and adds the new one. Use `list_available_skills` first when you need to inspect candidate skill ids. If the skill is already selected, this tool succeeds as a no-op. */
     "activate_skill": FloActivateSkillInput;
+    /** Ask the user for input and durably pause execution. Call this alone after finishing prerequisite tools. Include the complete question and any context the user needs; do not repeat it in assistant text. Options have a visible label, canonical value, and optional unambiguous aliases. Omit options or pass an empty list for a free-text question. Option labels, values and aliases must contain 1–512 UTF-8 bytes after normalization; at most 20 aliases per option. The answer is returned on resume. Never emit hidden question metadata in text. */
+    "ask_user": FloAskUserInput;
     /** Browse this task's stored tool-result artifact metadata, newest first. Use tool_name for exact filtering or query for case-insensitive metadata text search. Follow next_offset with the same filters to discover omitted artifacts; read_tool_result_artifact retrieves content. Content previews are omitted. Pruned metadata has sequence zero and remains discoverable without filters. Nonzero sequence is first-observed order, not proof that data is current. */
     "list_tool_result_artifacts": FloListToolResultArtifactsInput;
     /** Read a text resource from a selected skill or import any skill resource into VFS by `skill_id` and `resource_id`. Use `resource_id` exactly as provided in the prompt (for example, `"resource.1"`). Do not strip prefixes, rewrite the value, or replace it with the filename. Valid example: `"resource_id":"resource.1"`. Invalid examples: `"resource_id":"1"` and `"resource_id":"guide.md"`. For text resources, prefer `mode=text` to read content directly. Use `mode=import_to_vfs` only when you need the resource saved as a VFS file for other tools or file-based processing, and provide `destination_path`. `destination_path` must be a VFS path such as `task://...` or `session://...`. Key takeaway: the `resource_id` is system-assigned and may differ from the actual file path. */
@@ -1542,6 +1566,8 @@ declare module "flo:runtime" {
     "send_media_attachment": FloSendMediaAttachmentOutput;
     /** Output returned by the `activate_skill` runtime tool. */
     "activate_skill": FloActivateSkillOutput;
+    /** Output returned by the `ask_user` runtime tool. */
+    "ask_user": FloAskUserOutput;
     /** Output returned by the `list_tool_result_artifacts` runtime tool. */
     "list_tool_result_artifacts": FloListToolResultArtifactsOutput;
     /** Output returned by the `read_skill_resource` runtime tool. */
