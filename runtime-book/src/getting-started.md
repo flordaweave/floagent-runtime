@@ -33,6 +33,38 @@ execution:
 
 For a full local testing workflow, see [Testing With Node.js](testing-with-nodejs.md).
 
+## Excluding Files From Skill Bundles
+
+Create `.floignore` in the skill repository root or directly inside the directory
+being packed (`SKILLS_DIR`). The push script combines both files when present.
+Patterns refer to paths inside `SKILLS_DIR`, so omit the `skills/` prefix even
+when `.floignore` is at the repository root.
+
+```text
+# Local dependencies and test fixtures
+node_modules/
+*.tmp
+example/tests/
+private notes/
+```
+
+Each nonblank line is passed as a `tar --exclude` glob. Leading and trailing
+whitespace is trimmed; lines whose first non-whitespace character is `#` are
+comments. CRLF files and a final line without a newline are supported.
+
+Use `*`, `?`, and character classes such as `[ab]` for glob matching. These are
+tar exclusion patterns, not full Git ignore rules: patterns without slashes match
+names at any depth, and `*` can match across directory separators. A trailing
+`/` is optional for directory exclusions; excluding a directory excludes its
+entire subtree. Negation (`!`) and inline comments are not supported. Do not quote
+patterns; spaces inside a pattern are literal.
+
+The push script omits `.floignore` itself and continues to omit `._*`,
+`.DS_Store`, and `__MACOSX`. Without `.floignore`, packing otherwise works as
+before. Exclusions apply only during packing; local runtime discovery is unchanged.
+Keep referenced manifests, instructions, scripts, and assets in the bundle, or
+backend validation may reject it.
+
 ## Runtime Constraints You Should Know Early
 
 - Runtime script source can be JavaScript or TypeScript.

@@ -1666,9 +1666,10 @@ globalThis.__flo_runtime = {
     const toolName = request?.tool_id;
     // Model-only questions (including free-text questions) require a durable agent tool call.
     if (toolName === "ask_user") return unsupported("ask_user (requires durable agent task suspension)");
-    // Catalog discovery depends on the server-side task inventory, like artifact reads.
-    if (toolName === "list_tool_result_artifacts" || toolName === "read_tool_result_artifact") {
-      return unsupported(`flo.callTool(${toolName}): requires a live task artifact catalog`);
+    // Journal warnings live on the result envelope; declared outputs retain their original type.
+    // Catalog discovery and bounded pagination reservations require the live task result store.
+    if (["list_tool_result_artifacts", "read_tool_result_artifact", "list_tool_results", "read_tool_result"].includes(toolName)) {
+      return unsupported(`flo.callTool(${toolName}): requires a live task result store`);
     }
     return unsupported("flo.callTool");
   },
