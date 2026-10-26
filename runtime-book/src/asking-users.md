@@ -17,4 +17,6 @@ The agent pauses until the user responds. Users can choose an option or ask a fo
 
 Call `ask_user` on its own after prerequisite tools finish. Do not append hidden JSON or metadata tags to the visible response. The resumed tool result has status `answered`, `follow_up`, or `cancelled`. Only an `answered` result supplies a confirmed choice. A follow-up leaves the choice unresolved; do not perform an action that depends on it.
 
+Make the arguments self-contained. Put supporting details in `context` and all known choices in `options`; include distinguishing details such as carrier, service, and price in each label and use the exact rate ID as its value. Avoid referring to information or choices “above.” When a user asks to see or understand the details, explain them from saved evidence and keep the existing question pending. Call `ask_user` again only when its choices need to change.
+
 This is a model-facing tool. For a pause inside a skill script, use the existing `flo.task.waitForUserMessage` API instead.
