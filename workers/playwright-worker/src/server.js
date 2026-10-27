@@ -23,6 +23,8 @@ const defaultMaxContextsPerBrowser = parsePositiveInt(
   8,
 );
 const vncEnabled = process.env.ENABLE_VNC === "1";
+// HEADLESS=0 opens a visible browser on the host display (local debugging, no VNC needed).
+const headless = !vncEnabled && process.env.HEADLESS !== "0";
 const displayId = process.env.DISPLAY || ":99";
 const xvfbResolution = process.env.XVFB_RESOLUTION || "1440x900x24";
 const novncPort = parsePositiveInt(process.env.NOVNC_PORT, 6080);
@@ -439,7 +441,7 @@ export function createPlaywrightWorker(options = {}) {
       await ensureVncRuntime();
       state.browserPromise = chromiumImpl
         .launch({
-          headless: !vncEnabled,
+          headless,
           env: vncEnabled ? { ...process.env, DISPLAY: displayId } : process.env,
           args: ["--remote-debugging-address=0.0.0.0", "--remote-debugging-port=9222"],
         })
