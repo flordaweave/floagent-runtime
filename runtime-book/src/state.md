@@ -122,6 +122,8 @@ Writes return:
 - optional `entry`
 - optional `conflict_revision`
 
+A revision mismatch is not an error: the write returns `ok: false` with `conflict_revision`. Requests the runtime rejects throw an error that includes the reason, for example a `ttl_seconds` value above the deployment's maximum TTL, a zero `ttl_seconds`, or a list `limit` above 1000.
+
 ## When To Use `flo.state`
 
 Use manifest-declared state for:
